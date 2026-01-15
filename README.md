@@ -1,7 +1,6 @@
 
 
 
-```markdown
 # 🏭 Scrap Risk Prediction Tool | TE Connectivity AI Cup 2026
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-orange) ![Status](https://img.shields.io/badge/Status-Completed-success)
