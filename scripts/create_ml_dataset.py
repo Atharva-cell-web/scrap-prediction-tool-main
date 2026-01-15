@@ -1,119 +1,84 @@
-"""
-Script to create and analyze the final ML dataset.
-"""
+import sys
+import os
+
+# Fix: Add the project root directory to Python's path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
-import logging
-from src.config import get_all_machine_configs
-from src.data_joining import (
-    create_ml_dataset_for_machine,
-    create_ml_dataset_all_machines,
-    print_ml_dataset_summary,
-)
+import glob
+import re
+from src.config import RAW_PARAM_DIR, PROCESSED_DIR, HYDRA_FILE
+# FIX: Removed 'load_machine_data' because we don't use it anymore
+from src.data_loading import load_hydra_data
+from src.data_aggregation import aggregate_param_data
+from src.data_joining import join_hydra_param
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+def extract_machine_id(filename):
+    """
+    Smart function to find 'M-123' or 'M123' inside a long filename.
+    """
+    match = re.search(r'M[-_\s]?(\d{3})', filename, re.IGNORECASE)
+    if match:
+        return f"M-{match.group(1)}"
+    return "Unknown"
 
+def process_all_machines():
+    print(f"🚀 Starting Bulk Processing...")
+    print(f"📂 Looking for files in: {RAW_PARAM_DIR}")
+    
+    machine_files = list(RAW_PARAM_DIR.glob("*.csv"))
+    
+    if not machine_files:
+        print("❌ No files found! Check your 'data/raw_param' folder.")
+        return
 
-def main():
-    print("=" * 80)
-    print("CREATING FINAL ML DATASET")
-    print("=" * 80)
+    print(f"Found {len(machine_files)} files to process.\n")
     
-    configs = get_all_machine_configs()
-    
-    all_dfs = []
-    all_reports = []
-    
-    for machine_id, config in configs.items():
-        print(f"\n{'=' * 80}")
-        print(f"MACHINE: {machine_id}")
-        print("=" * 80)
+    all_machine_data = []
+
+    for file_path in machine_files:
+        filename = file_path.name
+        machine_id = extract_machine_id(filename)
         
-        # Create ML dataset with unmatched rows to see full picture
-        ml_df_full, report_full = create_ml_dataset_for_machine(config, keep_unmatched=True)
+        print(f"Processing: {filename} -> Detected ID: {machine_id}")
         
-        # Also create matched-only version
-        ml_df_matched, report_matched = create_ml_dataset_for_machine(config, keep_unmatched=False)
-        
-        print(report_full.summary())
-        
-        # Show summary for matched-only dataset
-        print("\n" + "-" * 70)
-        print("MATCHED ROWS ONLY (for modeling):")
-        print("-" * 70)
-        print(f"  Rows: {len(ml_df_matched):,}")
-        
-        if len(ml_df_matched) > 0:
-            print_ml_dataset_summary(ml_df_matched, f"ML Dataset (matched) - {machine_id}")
+        try:
+            # Load Param Data directly here
+            print(f"   - Loading sensor data (this may take a moment)...")
+            df_param = pd.read_csv(file_path, parse_dates=['timestamp'], low_memory=False)
+            print(f"   - Loaded {len(df_param)} rows.")
             
-            # Show sample of matched data
-            print(f"\nSample of MATCHED data (first 5 rows):")
-            key_cols = [
-                "machine_id", "date_key", "article", 
-                "actual_scrap_qty", "shift_scrap",
-                "Cushion_mean", "Cycle_time_mean", 
-                "Injection_pressure_mean", "Machine_status_mode"
-            ]
-            available_cols = [c for c in key_cols if c in ml_df_matched.columns]
-            print(ml_df_matched[available_cols].head().to_string(index=False))
+            # Aggregate
+            df_agg = aggregate_param_data(df_param)
+            print(f"   - Aggregated into {len(df_agg)} daily summaries.")
             
-            # Feature column sample
-            print(f"\nFeature columns available ({len([c for c in ml_df_matched.columns if '_mean' in c or '_max' in c or '_std' in c])} aggregations):")
-            feature_cols = [c for c in ml_df_matched.columns if '_mean' in c][:10]
-            for col in feature_cols:
-                print(f"  {col}: min={ml_df_matched[col].min():.2f}, max={ml_df_matched[col].max():.2f}")
+            # Load Hydra (Target)
+            df_hydra = load_hydra_data(str(HYDRA_FILE), machine_id)
             
-            all_dfs.append(ml_df_matched)
-            all_reports.append(report_matched)
-    
-    # Combined summary
-    if all_dfs:
-        combined_df = pd.concat(all_dfs, ignore_index=True)
-        
-        print("\n" + "=" * 80)
-        print("COMBINED ML DATASET (ALL MACHINES, MATCHED ONLY)")
-        print("=" * 80)
-        print_ml_dataset_summary(combined_df, "Combined ML Dataset")
-        
-        # Target distribution by machine
-        print("\nTARGET (actual_scrap_qty) BY MACHINE:")
-        for machine_id in combined_df["machine_id"].unique():
-            machine_data = combined_df[combined_df["machine_id"] == machine_id]
-            target = machine_data["actual_scrap_qty"]
-            print(f"  {machine_id}: n={len(machine_data)}, mean={target.mean():.1f}, "
-                  f"std={target.std():.1f}, range=[{target.min():.0f}, {target.max():.0f}]")
-        
-        # Feature completeness
-        print("\nFEATURE COMPLETENESS:")
-        feature_cols = [c for c in combined_df.columns if "_mean" in c or "_max" in c]
-        missing_pct = combined_df[feature_cols].isnull().sum() / len(combined_df) * 100
-        
-        if missing_pct.max() > 0:
-            print("  Features with missing values:")
-            for col, pct in missing_pct[missing_pct > 0].items():
-                print(f"    {col}: {pct:.1f}% missing")
-        else:
-            print("  All features are complete - no missing values!")
-        
-        # Ready for modeling message
-        print("\n" + "=" * 80)
-        print("ML DATASET READY FOR MODELING")
-        print("=" * 80)
-        print(f"""
-Dataset is ready for model training:
-  - Total samples: {len(combined_df):,}
-  - Features: {len([c for c in combined_df.columns if any(p in c for p in ['_mean', '_max', '_std', '_count', '_mode', '_delta'])])}
-  - Target: actual_scrap_qty (continuous)
-  - Machines: {combined_df['machine_id'].nunique()}
-  
-Note: Only rows with matching ParamData are included.
-Unmatched rows ({sum(r.unmatched_hydra_rows for r in all_reports):,}) were excluded.
-        """)
+            # Join
+            df_joined = join_hydra_param(df_hydra, df_agg)
+            
+            if not df_joined.empty:
+                df_joined['machine_id'] = machine_id
+                all_machine_data.append(df_joined)
+                print(f"   ✅ Success! Added {len(df_joined)} rows.")
+            else:
+                print(f"   ⚠️ No matching dates found for {machine_id}.")
 
+        except Exception as e:
+            print(f"   ❌ Error processing {machine_id}: {e}")
+            continue
+        
+        print("-" * 40)
+
+    if all_machine_data:
+        final_df = pd.concat(all_machine_data, ignore_index=True)
+        output_path = PROCESSED_DIR / "final_ml_dataset.parquet"
+        final_df.to_parquet(output_path)
+        print(f"\n🎉 DONE! Final dataset saved with {len(final_df)} rows.")
+        print(f"📍 Location: {output_path}")
+    else:
+        print("\n⚠️ Process finished, but no data was generated.")
 
 if __name__ == "__main__":
-    main()
+    process_all_machines()

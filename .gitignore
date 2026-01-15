@@ -1,10 +1,24 @@
-# Python-generated files
+# --- Your Old Rules (Keep these!) ---
 __pycache__/
-*.py[oc]
+*.py[cod]
 build/
 dist/
 wheels/
 *.egg-info
-
-# Virtual environments
 .venv
+
+# --- NEW RULES: Large Data & Models (Fixes HTTP 408 Error) ---
+# Ignore the 'models' folder (contains the large .pkl files)
+models/
+# Ignore data folders
+data/
+outputs/
+# Ignore specific large file types just in case they are outside folders
+*.pkl
+*.h5
+*.joblib
+*.pt
+*.pth
+
+# --- VS Code Settings ---
+.vscode/
