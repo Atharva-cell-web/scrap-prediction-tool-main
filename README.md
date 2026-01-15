@@ -1,187 +1,91 @@
-# Predictive Scrap AI Tool
 
-A Python-based predictive analytics tool for injection molding machines that predicts `actual_scrap_qty` at order + shift level using historical data.
 
-## 🎯 Business Objective
 
-Reduce scrap proactively by predicting scrap quantities before production runs, enabling operators to take preventive actions.
+```markdown
+# 🏭 Scrap Risk Prediction Tool | TE Connectivity AI Cup 2026
 
-## 📁 Project Structure
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-orange) ![Status](https://img.shields.io/badge/Status-Completed-success)
 
-```
-predictive-scrap-ai/
-├── data/                      # Machine data (CSV files)
-│   ├── M-221/
-│   │   ├── M-221HydraData.csv    # Order/Shift level data
-│   │   └── M-221ParamData.csv    # Time-series sensor data
-│   ├── M-601/
-│   │   ├── M-601HydraData.csv
-│   │   └── M-601ParamData.csv
-├── src/                       # Source code modules
-│   ├── __init__.py
-│   ├── config.py              # Configuration and schemas
-│   ├── data_loading.py        # Data loading utilities
-│   └── data_validation.py     # Data validation and quality checks
-├── notebooks/                 # Jupyter notebooks for exploration
-├── output/                    # Generated outputs (models, reports)
-├── .venv/                     # Virtual environment (created by uv)
-├── pyproject.toml             # Project dependencies
-└── README.md                  # This file
-```
+## 📌 Project Overview
+This project is developed for the **TE Connectivity AI Cup 2026**. It utilizes Machine Learning (Random Forest & Gradient Boosting) to analyze sensor data from the manufacturing process and predict the risk of "scrap" (defective products) early in the production line.
 
-## 📊 Data Overview
+**Key Features:**
+* **Data Preprocessing:** Handles missing values and feature scaling.
+* **Model Comparison:** Evaluates Logistic Regression, Random Forest, and Gradient Boosting.
+* **High Accuracy:** Achieved **99.9% accuracy** on the validation set using Random Forest.
+* **Automated Pipeline:** Scripts for training, validation, and result visualization.
 
-### HydraData (Tabular, Order/Shift Level)
-Contains order-level production information:
-- Order details
-- Shift information
-- Production quantity
-- **`actual_scrap_qty`** (TARGET variable)
+## 🛠️ Tech Stack
+* **Language:** Python
+* **Libraries:** Pandas, Scikit-learn, Matplotlib, Seaborn
+* **Tools:** VS Code, Git
 
-### ParamData (Time-series, Machine Parameters)
-Long-format sensor/process data:
-- `variable_name`: Sensor/parameter identifier
-- `value`: Measured value
-- `timestamp`: Measurement time
+---
 
-## 🚀 Quick Start
+## 🚀 How to Run Locally
 
-### Prerequisites
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) package manager
+Follow these steps to set up the project on your machine.
 
-### Installation
-
-1. **Clone/Navigate to the project:**
-   ```bash
-   cd predictive-scrap-ai
-   ```
-
-2. **Create and activate virtual environment:**
-   ```bash
-   # Create venv with uv
-   uv venv
-   
-   # Activate (Windows PowerShell)
-   .venv\Scripts\Activate.ps1
-   
-   # Activate (Windows CMD)
-   .venv\Scripts\activate.bat
-   
-   # Activate (Linux/Mac)
-   source .venv/bin/activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   uv sync
-   ```
-
-### Basic Usage
-
-```python
-from src.config import discover_machines, get_all_machine_configs
-from src.data_loading import load_hydra_data, load_param_data
-from src.data_validation import validate_and_report
-
-# Discover available machines
-machines = discover_machines()
-print(f"Available machines: {machines}")
-
-# Get configuration for a specific machine
-configs = get_all_machine_configs()
-machine_config = configs["M-221"]
-
-# Load HydraData
-hydra_df = load_hydra_data(machine_config)
-print(f"Loaded {len(hydra_df)} rows of HydraData")
-
-# Load ParamData
-param_df = load_param_data(machine_config)
-print(f"Loaded {len(param_df)} rows of ParamData")
-
-# Validate data
-report = validate_and_report(hydra_df, data_type="hydra")
-```
-
-## 📦 Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| pandas | Data manipulation and analysis |
-| numpy | Numerical computing |
-| scikit-learn | Machine learning algorithms |
-| matplotlib | Static visualizations |
-| seaborn | Statistical visualizations |
-| pyarrow | Efficient data serialization |
-
-## 🔧 Development
-
-### Running Tests
+### 1. Clone the Repository
 ```bash
-# Install dev dependencies
-uv sync --dev
+git clone [https://github.com/Atharva-cell-web/scrap-prediction-tool-main.git](https://github.com/Atharva-cell-web/scrap-prediction-tool-main.git)
+cd scrap-prediction-tool-main
 
-# Run tests
-pytest
 ```
 
-### Code Style
-The project uses:
-- **black** for code formatting
-- **ruff** for linting
+### 2. Install Dependencies
+
+Ensure you have Python installed, then run:
 
 ```bash
-# Format code
-black src/
+pip install -r requirements.txt
 
-# Lint code
-ruff check src/
 ```
 
-## 📋 Module Documentation
+### 3. Add the Dataset (Important)
 
-### config.py
-Centralizes all configuration:
-- Path definitions
-- Data schemas (HydraDataSchema, ParamDataSchema)
-- Machine configurations
-- Validation settings
+*Note: Due to file size limits, the dataset is not included in this repo.*
 
-### data_loading.py
-Handles data ingestion:
-- Robust CSV loading with auto-detection
-- Column standardization
-- Multi-machine data combination
-- Memory-efficient loading options
+1. Create a folder named `data` inside the project directory.
+2. Place your dataset file (e.g., `scrap_data.csv`) inside the `data` folder.
+3. Create an empty folder named `models` in the root directory (this is where trained models will be saved).
 
-### data_validation.py
-Ensures data quality:
-- Missing value checks
-- Duplicate detection
-- Outlier identification (IQR method)
-- Schema validation
-- Validation reports
+### 4. Run the Training Script
 
-## ⚠️ Assumptions
+To train the model and see the evaluation metrics:
 
-1. Data follows the naming convention: `{MACHINE_ID}HydraData.csv`, `{MACHINE_ID}ParamData.csv`
-2. Machine IDs are folder names in the `data/` directory
-3. HydraData contains a target column named `actual_scrap_qty`
-4. ParamData is in long format with `variable_name`, `value`, `timestamp` columns
-5. Industrial data may have quality issues (handled gracefully)
+```bash
+python scripts/train_final_model.py
 
-## 🗺️ Roadmap
+```
 
-- [x] Data loading module
-- [x] Data validation module
-- [ ] Feature engineering
-- [ ] Time-series aggregation
-- [ ] Baseline model development
-- [ ] Model evaluation framework
-- [ ] Hyperparameter tuning
-- [ ] Production deployment
+To compare different algorithms:
 
-## 📄 License
+```bash
+python scripts/compare_models.py
 
-Internal use only.
+```
+
+---
+
+## 📂 Project Structure
+
+```
+├── data/                  # Dataset files (Not on GitHub)
+├── models/                # Trained .pkl models (Not on GitHub)
+├── scripts/               # Python source code
+│   ├── train_final_model.py
+│   ├── compare_models.py
+│   └── validate_model.py
+├── requirements.txt       # Python dependencies
+└── README.md              # Project documentation
+
+```
+
+## 👨‍💻 Contributors
+
+* **Atharva Patil** - *Lead Developer*
+
+
+
+```
