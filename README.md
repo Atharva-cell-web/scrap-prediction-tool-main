@@ -40,91 +40,51 @@ The system operates in two distinct modes:
 
 ---
 
-## 🚀 How to Run Locally (Step-by-Step)
+🚀 How to Run the Scrap Prediction AI on Your Laptop
+Prerequisites:
 
-Follow these instructions to set up the project on your own machine.
+Install Python (Check "Add Python to PATH" during installation).
 
-### Prerequisites
-* Python 3.8+ installed (Make sure to check "Add Python to PATH" during installation).
-* VS Code (Recommended IDE).
-* Git.
+Install VS Code.
 
-### 1. Clone the Repository
-Open your terminal (or Git Bash) and run:
-```bash
-git clone [https://github.com/Atharva-cell-web/scrap-prediction-tool-main.git](https://github.com/Atharva-cell-web/scrap-prediction-tool-main.git)
-cd scrap-prediction-tool-main
+Install Git.
 
-```
+Step 1: Download the Code Open a folder on your computer, right-click, select "Open Git Bash" (or use terminal), and run:
 
-### 2. Set Up the Virtual Environment
+Bash
+git clone <PASTE_YOUR_GITHUB_REPO_LINK_HERE>
+Step 2: Open in VS Code
 
-Create an isolated Python environment to keep your system clean.
+Open VS Code.
 
-**For Windows:**
+Go to File > Open Folder and select the folder you just downloaded.
 
-```powershell
+Step 3: Create the Virtual Brain (Environment) We need to create an isolated space for the AI libraries.
+
+Open a New Terminal in VS Code (Ctrl + ~).
+
+Run this command to create the environment:
+
+PowerShell
 python -m venv env
+Step 4: Activate the Environment Turn the environment on.
+
+Windows:
+
+PowerShell
 .\env\Scripts\activate
+(If you see a green (env) at the start of the line, it worked!)
 
-```
+Mac/Linux:
 
-**For Mac/Linux:**
-
-```bash
-python3 -m venv env
+Bash
 source env/bin/activate
+Step 5: Install the Libraries Now, install all the AI tools (Streamlit, XGBoost, etc.) automatically using the file included in the repo:
 
-```
-
-*(You should see `(env)` appear at the start of your terminal line).*
-
-### 3. Install Dependencies
-
-Install all required libraries automatically:
-
-```bash
+PowerShell
 pip install -r requirements.txt
+Step 6: Run the App Once the installation finishes, launch the dashboard:
 
-```
-
-### 4. Run the Dashboard
-
-Launch the application:
-
-```bash
+PowerShell
 streamlit run forecasting_v2/app_v3.py
-
-```
-
-The app will automatically open in your browser at `http://localhost:8501`.
-
----
-
-## 📂 Project Structure
-
-* `forecasting_v2/data/` - Contains the raw sensor logs and historical scrap reports.
-* `forecasting_v2/models/` - Stores the trained AI brains (`.pkl` files).
-* `forecasting_v2/scripts/` - The Python code used to train the models.
-* `app_v3.py` - The main dashboard application.
-
----
-
-## 👨‍💻 Troubleshooting
-
-* **Error: "Streamlit is not recognized"**
-* *Fix:* Make sure you activated the environment (Step 2) before running the command.
-
-
-* **Error: "Path not found"**
-* *Fix:* Ensure you are in the root folder (`scrap-prediction-tool-main`) before running the streamlit command.
-
-
-
----
-
-### © 2026 TE Digital Twin Team
-
-```
-
-```
+The app should open in your browser immediately! 🎉
